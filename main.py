@@ -2,7 +2,7 @@ import psycopg2
 import sys
 from typing import List, Union
 import json
-from config.config import PG_CONFIG, BATCH_SIZE, DATA_DIR
+from config import PG_CONFIG, BATCH_SIZE, DATA_DIR
 
 QUERY = open("queries/transaction_query.sql").read()
 
