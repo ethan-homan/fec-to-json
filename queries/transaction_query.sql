@@ -28,7 +28,7 @@ SELECT
         committee_master.connected_org_nm as committee__organization_name,
 
         -- Candidate
-        candidate_master.file_year || '::cand::' || candidate_master.file_year as candidate__id,
+        candidate_master.file_year || '::cand::' || candidate_master.cand_id as candidate__id,
         candidate_master.cand_name as candidate__name,
         candidate_master.cand_pty_affiliation as candidate__party_affiliation,
         candidate_master.cand_office as candidate__office,

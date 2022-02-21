@@ -1,12 +1,10 @@
 import psycopg2
+import sys
 from typing import List, Union
 import json
-from config.config import PG_CONFIG
+from config.config import PG_CONFIG, BATCH_SIZE, DATA_DIR
 
-Q = open("queries/transaction_query.sql").read()
-BATCH_SIZE = 100000
-DATA_DIR = "data"
-YEARS = [2018, 2020]
+QUERY = open("queries/transaction_query.sql").read()
 
 
 def process_batch(
@@ -32,13 +30,15 @@ def process_batch(
 
 if __name__ == "__main__":
 
+    years = sys.argv[1:]
+
     with psycopg2.connect(**PG_CONFIG) as conn:
 
-        for year in YEARS:
+        for year in years:
 
             with conn.cursor(name="SS_CURSOR") as cursor:
 
-                cursor.execute(Q, dict(file_year=year))
+                cursor.execute(QUERY, dict(file_year=year))
 
                 rows = cursor.fetchmany(BATCH_SIZE)
                 batch_counter = 1
