@@ -1,10 +1,11 @@
+import argparse
+import json
 import psycopg2
 import sys
-from typing import List, Union
-import json
 from config import PG_CONFIG, BATCH_SIZE, DATA_DIR
+from typing import List, Union
 
-QUERY = open("queries/transaction_query.sql").read()
+QUERY = open("queries/transaction_flat.sql").read()
 
 
 def process_batch(
@@ -28,22 +29,26 @@ def process_batch(
     f.close()
 
 
-if __name__ == "__main__":
-
-    years = sys.argv[1:]
-
+def run(years: List[int]) -> None:
+    """
+    :param years: a list of years to
+    :return:
+    """
     with psycopg2.connect(**PG_CONFIG) as conn:
 
         for year in years:
-
+            # Set up a server-side cursor since results are in the 10's of GBs.
             with conn.cursor(name="SS_CURSOR") as cursor:
 
                 cursor.execute(QUERY, dict(file_year=year))
 
                 rows = cursor.fetchmany(BATCH_SIZE)
                 batch_counter = 1
+
+                # Fetch column names once.
                 column_names = [desc[0] for desc in cursor.description]
 
+                # Scroll through one batch at a time.
                 while rows:
                     print(f"Year {year} - Batch {batch_counter}")
                     process_batch(
@@ -53,3 +58,19 @@ if __name__ == "__main__":
                     )
                     rows = cursor.fetchmany(BATCH_SIZE)
                     batch_counter += 1
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Flattens FEC data loaded into Postres")
+    parser.add_argument(
+        '--years',
+        help="A list of election cycles to flatten and write to JSON",
+        type=int,
+        nargs='+',
+        choices=[2006, 2008, 2010, 2012, 2014, 2016, 2018, 2020, 2022],
+        required=True,
+    )
+    opts = parser.parse_args()
+
+    year_args: List[int] = opts.years
+    run(year_args)
